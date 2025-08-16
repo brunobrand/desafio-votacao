@@ -36,6 +36,6 @@ class PautaServiceTest {
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
         assertEquals("Título da Pauta", resultado.getTitulo());
-        verify(pautaRepository, times(1)).save(any(Pauta.class)); // Verifica se o save foi chamado 1 vez
+        verify(pautaRepository, times(1)).save(any(Pauta.class)); 
     }
 }

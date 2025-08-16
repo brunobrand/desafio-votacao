@@ -24,7 +24,6 @@ public class PautaController {
     public ResponseEntity<Pauta> criarPauta(@RequestBody PautaDTO pautaDTO) {
         Pauta pautaSalva = pautaService.criarPauta(pautaDTO);
 
-        // Cria a URI do novo recurso criado para retornar no header "Location"
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(pautaSalva.getId())

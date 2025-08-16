@@ -41,7 +41,7 @@ public class PautaControllerTest {
 
     @Test
     void deveCriarPauta_quandoEnviarDadosValidos_retornarStatus201() throws Exception {
-        // Arrange
+       
         PautaDTO pautaDTO = new PautaDTO("Pauta Teste", "Descrição Teste");
         Pauta pautaSalva = new Pauta();
         pautaSalva.setId(1L);
@@ -50,12 +50,27 @@ public class PautaControllerTest {
 
         when(pautaService.criarPauta(any(PautaDTO.class))).thenReturn(pautaSalva);
 
-        // Act & Assert
         mockMvc.perform(post("/api/v1/pautas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pautaDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.titulo").value("Pauta Teste"));
+    }
+
+    @Test
+    void deveRetornarStatusBadRequest_quandoTentarCriarPautaComTituloNulo() throws Exception {
+        
+        PautaDTO pautaInvalidaDTO = new PautaDTO(null, "Descrição sem título");
+        String mensagemDeErroEsperada = "O título da pauta não pode ser nulo ou vazio.";
+
+        when(pautaService.criarPauta(any(PautaDTO.class)))
+            .thenThrow(new IllegalArgumentException(mensagemDeErroEsperada));
+
+        mockMvc.perform(post("/api/v1/pautas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(pautaInvalidaDTO)))
+                .andExpect(status().isBadRequest()) 
+                .andExpect(content().string(mensagemDeErroEsperada));
     }
 }
