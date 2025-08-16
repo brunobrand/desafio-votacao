@@ -23,19 +23,16 @@ class PautaServiceTest {
 
     @Test
     void deveCriarPautaComSucesso() {
-        // Arrange 
         var pautaDto = new PautaDTO("Título da Pauta", "Descrição da Pauta");
         var pautaSalva = new Pauta();
         pautaSalva.setId(1L);
         pautaSalva.setTitulo("Título da Pauta");
 
-        // Configurando o comportamento do mock
+        // mock
         when(pautaRepository.save(any(Pauta.class))).thenReturn(pautaSalva);
 
-        // Act 
         Pauta resultado = pautaService.criarPauta(pautaDto);
 
-        // Assert 
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
         assertEquals("Título da Pauta", resultado.getTitulo());
