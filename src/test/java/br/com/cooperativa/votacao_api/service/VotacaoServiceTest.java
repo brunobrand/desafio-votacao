@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -117,6 +118,27 @@ class VotacaoServiceTest {
 
         assertEquals(votoDTO.cpfAssociado(), votoSalvo.getCpfAssociado());
         assertTrue(votoSalvo.isVotoSim()); 
+    }
+
+    @Test
+    void deveLancarExcecao_aoTentarVotarEmSessaoEncerrada() {
+        long sessaoId = 2L;
+        var votoDTO = new VotoRequestDTO("12345678901", "Sim");
+
+        Pauta pauta = new Pauta();
+        // sessão que fechou há 1 minuto atrás
+        SessaoVotacao sessaoEncerrada = new SessaoVotacao(pauta, LocalDateTime.now().minusMinutes(1));
+
+        // devolve a sessão já encerrada
+        when(sessaoVotacaoRepository.findById(sessaoId)).thenReturn(Optional.of(sessaoEncerrada));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            votacaoService.registrarVoto(sessaoId, votoDTO);
+        });
+
+        assertEquals("A sessão de votação já está encerrada.", exception.getMessage());
+
+        verify(votoRepository, never()).save(any(Voto.class));
     }
 
 }
