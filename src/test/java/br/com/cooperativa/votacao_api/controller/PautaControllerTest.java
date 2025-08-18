@@ -6,11 +6,11 @@ import br.com.cooperativa.votacao_api.domain.model.Pauta;
 import br.com.cooperativa.votacao_api.service.PautaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito; // Import necessário
+import org.mockito.Mockito; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration; // Import necessário
-import org.springframework.context.annotation.Bean; // Import necessário
+import org.springframework.boot.test.context.TestConfiguration; 
+import org.springframework.context.annotation.Bean; 
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
