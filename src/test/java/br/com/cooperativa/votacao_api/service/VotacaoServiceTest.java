@@ -126,10 +126,9 @@ class VotacaoServiceTest {
         var votoDTO = new VotoRequestDTO("12345678901", "Sim");
 
         Pauta pauta = new Pauta();
-        // sessão que fechou há 1 minuto atrás
+        
         SessaoVotacao sessaoEncerrada = new SessaoVotacao(pauta, LocalDateTime.now().minusMinutes(1));
 
-        // devolve a sessão já encerrada
         when(sessaoVotacaoRepository.findById(sessaoId)).thenReturn(Optional.of(sessaoEncerrada));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
@@ -150,7 +149,7 @@ class VotacaoServiceTest {
         SessaoVotacao sessaoAberta = new SessaoVotacao(pauta, LocalDateTime.now().plusHours(1));
 
         when(sessaoVotacaoRepository.findById(sessaoId)).thenReturn(Optional.of(sessaoAberta));
-        
+
         when(votoRepository.existsBySessaoVotacaoIdAndCpfAssociado(sessaoId, votoDTO.cpfAssociado()))
             .thenReturn(true);
 
