@@ -1,8 +1,11 @@
 package br.com.cooperativa.votacao_api.service;
 
+import br.com.cooperativa.votacao_api.controller.dto.VotoRequestDTO;
 import br.com.cooperativa.votacao_api.domain.model.SessaoVotacao;
+import br.com.cooperativa.votacao_api.domain.model.Voto;
 import br.com.cooperativa.votacao_api.domain.repository.PautaRepository;
 import br.com.cooperativa.votacao_api.domain.repository.SessaoVotacaoRepository;
+import br.com.cooperativa.votacao_api.domain.repository.VotoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,18 +18,42 @@ public class VotacaoService {
 
     private final PautaRepository pautaRepository;
     private final SessaoVotacaoRepository sessaoVotacaoRepository;
+    private final VotoRepository votoRepository; 
 
     public SessaoVotacao abrirSessao(Long pautaId, Integer duracaoEmMinutos) {
-       var pauta = pautaRepository.findById(pautaId)
-            .orElseThrow(() -> new EntityNotFoundException("Pauta com ID " + pautaId + " não encontrada."));
+        var pauta = pautaRepository.findById(pautaId)
+                .orElseThrow(() -> new EntityNotFoundException("Pauta com ID " + pautaId + " não encontrada."));
 
         Integer duracaoFinal = (duracaoEmMinutos == null || duracaoEmMinutos <= 0) ? 1 : duracaoEmMinutos;
-
         LocalDateTime dataFechamento = LocalDateTime.now().plusMinutes(duracaoFinal);
         
         SessaoVotacao novaSessao = new SessaoVotacao(pauta, dataFechamento);
 
         return sessaoVotacaoRepository.save(novaSessao);
     }
-    
+
+    public void registrarVoto(Long sessaoId, VotoRequestDTO votoDTO) {
+        if (!"Sim".equalsIgnoreCase(votoDTO.voto()) && !"Não".equalsIgnoreCase(votoDTO.voto())) {
+            throw new IllegalArgumentException("O voto deve ser 'Sim' ou 'Não'.");
+        }
+
+        SessaoVotacao sessao = sessaoVotacaoRepository.findById(sessaoId)
+                .orElseThrow(() -> new EntityNotFoundException("Sessão com ID " + sessaoId + " não encontrada."));
+
+        if (LocalDateTime.now().isAfter(sessao.getDataFechamento())) {
+            throw new IllegalStateException("A sessão de votação já está encerrada.");
+        }
+
+        boolean jaVotou = votoRepository.existsBySessaoVotacaoIdAndCpfAssociado(sessaoId, votoDTO.cpfAssociado());
+        if (jaVotou) {
+            throw new IllegalStateException("Associado já votou nesta pauta.");
+        }
+
+        Voto novoVoto = new Voto();
+        novoVoto.setSessaoVotacao(sessao);
+        novoVoto.setCpfAssociado(votoDTO.cpfAssociado());
+        novoVoto.setVotoSim("Sim".equalsIgnoreCase(votoDTO.voto()));
+
+        votoRepository.save(novoVoto);
+    }
 }

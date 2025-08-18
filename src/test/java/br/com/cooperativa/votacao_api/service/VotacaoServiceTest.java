@@ -1,7 +1,10 @@
 package br.com.cooperativa.votacao_api.service;
 
+import br.com.cooperativa.votacao_api.controller.dto.VotoRequestDTO;
 import br.com.cooperativa.votacao_api.domain.model.Pauta;
 import br.com.cooperativa.votacao_api.domain.model.SessaoVotacao;
+import br.com.cooperativa.votacao_api.domain.model.Voto;
+import br.com.cooperativa.votacao_api.domain.repository.VotoRepository;
 import br.com.cooperativa.votacao_api.domain.repository.PautaRepository;
 import br.com.cooperativa.votacao_api.domain.repository.SessaoVotacaoRepository;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class VotacaoServiceTest {
 
+    @Mock
+    private VotoRepository votoRepository;
+    
     @Mock
     private PautaRepository pautaRepository;
 
@@ -86,6 +92,31 @@ class VotacaoServiceTest {
         });
 
         verify(sessaoVotacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveRegistrarVotoComSucesso_quandoSessaoEstiverAbertaEAssociadoNaoVotou() {
+        long sessaoId = 1L;
+        var votoDTO = new VotoRequestDTO("12345678901", "Sim");
+
+        Pauta pauta = new Pauta();
+
+        SessaoVotacao sessaoAberta = new SessaoVotacao(pauta, LocalDateTime.now().plusHours(1));
+
+        when(sessaoVotacaoRepository.findById(sessaoId)).thenReturn(Optional.of(sessaoAberta));
+        when(votoRepository.existsBySessaoVotacaoIdAndCpfAssociado(sessaoId, votoDTO.cpfAssociado()))
+            .thenReturn(false); 
+
+ 
+        votacaoService.registrarVoto(sessaoId, votoDTO);
+
+        
+        ArgumentCaptor<Voto> votoCaptor = ArgumentCaptor.forClass(Voto.class);
+        verify(votoRepository).save(votoCaptor.capture()); 
+        Voto votoSalvo = votoCaptor.getValue();
+
+        assertEquals(votoDTO.cpfAssociado(), votoSalvo.getCpfAssociado());
+        assertTrue(votoSalvo.isVotoSim()); 
     }
 
 }
