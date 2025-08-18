@@ -141,4 +141,25 @@ class VotacaoServiceTest {
         verify(votoRepository, never()).save(any(Voto.class));
     }
 
+    @Test
+    void deveLancarExcecao_aoTentarVotarDuasVezesNaMesmaSessao() {
+        long sessaoId = 3L;
+        var votoDTO = new VotoRequestDTO("11122233344", "Não");
+
+        Pauta pauta = new Pauta();
+        SessaoVotacao sessaoAberta = new SessaoVotacao(pauta, LocalDateTime.now().plusHours(1));
+
+        when(sessaoVotacaoRepository.findById(sessaoId)).thenReturn(Optional.of(sessaoAberta));
+        
+        when(votoRepository.existsBySessaoVotacaoIdAndCpfAssociado(sessaoId, votoDTO.cpfAssociado()))
+            .thenReturn(true);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            votacaoService.registrarVoto(sessaoId, votoDTO);
+        });
+
+        assertEquals("Associado já votou nesta pauta.", exception.getMessage());
+        verify(votoRepository, never()).save(any(Voto.class));
+    }
+
 }
