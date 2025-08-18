@@ -1,9 +1,8 @@
 package br.com.cooperativa.votacao_api.controller;
 
-import  br.com.cooperativa.votacao_api.domain.controller.dto.AbrirSessaoDTO;
+import br.com.cooperativa.votacao_api.controller.dto.AbrirSessaoDTO;
 import br.com.cooperativa.votacao_api.domain.model.Pauta;
 import br.com.cooperativa.votacao_api.domain.model.SessaoVotacao;
-import br.com.cooperativa.votacao_api.domain.controller.VotacaoController;
 import br.com.cooperativa.votacao_api.service.VotacaoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -14,6 +13,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import jakarta.persistence.EntityNotFoundException;
+import br.com.cooperativa.votacao_api.controller.advice.RestExceptionHandler;
+import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
 
@@ -25,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(VotacaoController.class)
+@Import(RestExceptionHandler.class) 
 class VotacaoControllerTest {
 
     @Autowired
@@ -63,4 +66,20 @@ class VotacaoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.pauta.id").value(pautaId));
     }
+
+    @Test
+    void deveRetornarStatus404_quandoTentarAbrirSessaoParaPautaInexistente() throws Exception {
+        long pautaIdInexistente = 99L;
+        var requestDTO = new AbrirSessaoDTO(10);
+        String mensagemDeErroEsperada = "Pauta não encontrada.";
+
+        when(votacaoService.abrirSessao(eq(pautaIdInexistente), any()))
+            .thenThrow(new EntityNotFoundException(mensagemDeErroEsperada));
+
+        mockMvc.perform(post("/api/v1/pautas/{pautaId}/sessoes", pautaIdInexistente)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isNotFound()); 
+    }
+
 }

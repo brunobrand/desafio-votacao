@@ -1,7 +1,6 @@
 package br.com.cooperativa.votacao_api.controller;
 
-import br.com.cooperativa.votacao_api.domain.controller.PautaController;
-import br.com.cooperativa.votacao_api.domain.controller.dto.PautaDTO;
+import br.com.cooperativa.votacao_api.controller.dto.PautaDTO;
 import br.com.cooperativa.votacao_api.domain.model.Pauta;
 import br.com.cooperativa.votacao_api.service.PautaService;
 import com.fasterxml.jackson.databind.ObjectMapper;

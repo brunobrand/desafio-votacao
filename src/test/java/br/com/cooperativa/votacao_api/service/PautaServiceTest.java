@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import br.com.cooperativa.votacao_api.domain.model.Pauta;
-import br.com.cooperativa.votacao_api.domain.controller.dto.PautaDTO;
+import br.com.cooperativa.votacao_api.controller.dto.PautaDTO;
 import br.com.cooperativa.votacao_api.domain.repository.PautaRepository;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;

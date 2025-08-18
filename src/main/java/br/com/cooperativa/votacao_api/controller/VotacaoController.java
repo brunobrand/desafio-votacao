@@ -1,6 +1,6 @@
-package br.com.cooperativa.votacao_api.domain.controller;
+package br.com.cooperativa.votacao_api.controller;
 
-import br.com.cooperativa.votacao_api.domain.controller.dto.AbrirSessaoDTO;
+import br.com.cooperativa.votacao_api.controller.dto.AbrirSessaoDTO;
 import br.com.cooperativa.votacao_api.domain.model.SessaoVotacao;
 import br.com.cooperativa.votacao_api.service.VotacaoService;
 import lombok.AllArgsConstructor;
