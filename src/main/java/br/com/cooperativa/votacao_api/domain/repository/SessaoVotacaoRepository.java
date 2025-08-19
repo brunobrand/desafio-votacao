@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SessaoVotacaoRepository extends JpaRepository<SessaoVotacao, Long> {
-    // Encontra a primeira (findFirst) por PautaId, ordenando por ID de forma decrescente (OrderByIdDesc)
     Optional<SessaoVotacao> findFirstByPautaIdOrderByIdDesc(Long pautaId);
 }

@@ -21,6 +21,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -176,8 +178,8 @@ class VotacaoServiceTest {
         when(pautaRepository.findById(pautaId)).thenReturn(Optional.of(pauta));
         when(sessaoVotacaoRepository.findFirstByPautaIdOrderByIdDesc(pautaId)).thenReturn(Optional.of(sessaoEncerrada));
 
-        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, true)).thenReturn(10L); // 10 votos Sim
-        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, false)).thenReturn(5L);  // 5 votos Não
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, true)).thenReturn(10L); 
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, false)).thenReturn(5L);  
 
         ResultadoDTO resultado = votacaoService.contabilizarResultado(pautaId);
 
@@ -187,4 +189,81 @@ class VotacaoServiceTest {
         assertEquals("Aprovada", resultado.resultado());
     }
 
+
+    @Test
+    void deveContabilizarResultadoEReprovado_quandoHouverMaisVotosNao() {
+        long pautaId = 2L;
+        long sessaoId = 2L;
+        Pauta pauta = new Pauta();
+        pauta.setId(pautaId);
+
+        SessaoVotacao sessaoEncerrada = new SessaoVotacao();
+        sessaoEncerrada.setId(sessaoId);
+        sessaoEncerrada.setPauta(pauta);
+        sessaoEncerrada.setDataFechamento(LocalDateTime.now().minusMinutes(1)); 
+
+        when(pautaRepository.findById(pautaId)).thenReturn(Optional.of(pauta));
+        when(sessaoVotacaoRepository.findFirstByPautaIdOrderByIdDesc(pautaId)).thenReturn(Optional.of(sessaoEncerrada));
+
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, true)).thenReturn(5L);  
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, false)).thenReturn(10L); 
+
+        ResultadoDTO resultado = votacaoService.contabilizarResultado(pautaId);
+
+        assertNotNull(resultado);
+        assertEquals(5L, resultado.votosSim());
+        assertEquals(10L, resultado.votosNao());
+        assertEquals("Reprovada", resultado.resultado());
+    }
+    
+
+    @Test
+    void deveContabilizarResultadoEEmpate_quandoHouverNumeroIgualDeVotos() {
+        long pautaId = 3L;
+        long sessaoId = 3L;
+        Pauta pauta = new Pauta();
+        pauta.setId(pautaId);
+        
+        SessaoVotacao sessaoEncerrada = new SessaoVotacao();
+        sessaoEncerrada.setId(sessaoId);
+        sessaoEncerrada.setPauta(pauta);
+        sessaoEncerrada.setDataFechamento(LocalDateTime.now().minusMinutes(1));
+
+        when(pautaRepository.findById(pautaId)).thenReturn(Optional.of(pauta));
+        when(sessaoVotacaoRepository.findFirstByPautaIdOrderByIdDesc(pautaId)).thenReturn(Optional.of(sessaoEncerrada));
+        
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, true)).thenReturn(7L); // 7 votos Sim
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, false)).thenReturn(7L); // 7 votos Não
+
+        ResultadoDTO resultado = votacaoService.contabilizarResultado(pautaId);
+
+        assertNotNull(resultado);
+        assertEquals(7L, resultado.votosSim());
+        assertEquals(7L, resultado.votosNao());
+        assertEquals("Empate", resultado.resultado());
+    }
+
+    
+    @Test
+    void deveRetornarMensagemDeSessaoAberta_quandoContabilizarResultadoDeSessaoNaoEncerrada() {
+        long pautaId = 4L;
+        long sessaoId = 4L;
+        Pauta pauta = new Pauta();
+        pauta.setId(pautaId);
+
+        SessaoVotacao sessaoAberta = new SessaoVotacao();
+        sessaoAberta.setId(sessaoId);
+        sessaoAberta.setPauta(pauta);
+        sessaoAberta.setDataFechamento(LocalDateTime.now().plusHours(1));
+
+        when(pautaRepository.findById(pautaId)).thenReturn(Optional.of(pauta));
+        when(sessaoVotacaoRepository.findFirstByPautaIdOrderByIdDesc(pautaId)).thenReturn(Optional.of(sessaoAberta));
+
+        ResultadoDTO resultado = votacaoService.contabilizarResultado(pautaId);
+
+        assertNotNull(resultado);
+        assertEquals("A sessão de votação ainda está aberta.", resultado.resultado());
+        
+        verify(votoRepository, never()).countBySessaoVotacaoIdAndVotoSim(anyLong(), anyBoolean());
+    }
 }
