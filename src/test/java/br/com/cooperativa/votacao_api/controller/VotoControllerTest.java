@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,5 +67,20 @@ class VotoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(votoDTO)))
                 .andExpect(status().isBadRequest()); 
+    }
+
+    @Test
+    void deveRetornarStatusBadRequest_quandoAssociadoTentarVotarDuasVezes() throws Exception {
+        long sessaoId = 3L;
+        var votoDTO = new VotoRequestDTO("11122233344", "Não");
+        String mensagemDeErro = "Associado já votou nesta pauta.";
+
+        doThrow(new IllegalStateException(mensagemDeErro))
+            .when(votacaoService).registrarVoto(any(Long.class), any(VotoRequestDTO.class));
+
+        mockMvc.perform(post("/api/v1/sessoes/{sessaoId}/votos", sessaoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(votoDTO)))
+                .andExpect(status().isBadRequest());
     }
 }
