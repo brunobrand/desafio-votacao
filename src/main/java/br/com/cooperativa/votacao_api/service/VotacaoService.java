@@ -1,6 +1,8 @@
 package br.com.cooperativa.votacao_api.service;
 
 import br.com.cooperativa.votacao_api.controller.dto.VotoRequestDTO;
+import br.com.cooperativa.votacao_api.controller.dto.ResultadoDTO;
+import br.com.cooperativa.votacao_api.domain.model.Pauta;
 import br.com.cooperativa.votacao_api.domain.model.SessaoVotacao;
 import br.com.cooperativa.votacao_api.domain.model.Voto;
 import br.com.cooperativa.votacao_api.domain.repository.PautaRepository;
@@ -10,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.time.LocalDateTime;
 
 @Service
@@ -55,5 +58,36 @@ public class VotacaoService {
         novoVoto.setVotoSim("Sim".equalsIgnoreCase(votoDTO.voto()));
 
         votoRepository.save(novoVoto);
+    }
+
+    public ResultadoDTO contabilizarResultado(Long pautaId) {
+        Pauta pauta = pautaRepository.findById(pautaId)
+                .orElseThrow(() -> new EntityNotFoundException("Pauta com ID " + pautaId + " não encontrada."));
+
+        Optional<SessaoVotacao> sessaoOpt = sessaoVotacaoRepository.findFirstByPautaIdOrderByIdDesc(pautaId);
+
+        if (sessaoOpt.isEmpty()) {
+            return new ResultadoDTO(pautaId, null, 0L, 0L, "Nenhuma sessão de votação encontrada para esta pauta.");
+        }
+
+        SessaoVotacao sessao = sessaoOpt.get();
+
+        if (LocalDateTime.now().isBefore(sessao.getDataFechamento())) {
+            return new ResultadoDTO(pautaId, sessao.getId(), 0L, 0L, "A sessão de votação ainda está aberta.");
+        }
+
+        Long votosSim = votoRepository.countBySessaoVotacaoIdAndVotoSim(sessao.getId(), true);
+        Long votosNao = votoRepository.countBySessaoVotacaoIdAndVotoSim(sessao.getId(), false);
+
+        String resultadoFinal;
+        if (votosSim > votosNao) {
+            resultadoFinal = "Aprovada";
+        } else if (votosNao > votosSim) {
+            resultadoFinal = "Reprovada";
+        } else {
+            resultadoFinal = "Empate";
+        }
+
+        return new ResultadoDTO(pautaId, sessao.getId(), votosSim, votosNao, resultadoFinal);
     }
 }

@@ -1,5 +1,6 @@
 package br.com.cooperativa.votacao_api.service;
 
+import br.com.cooperativa.votacao_api.controller.dto.ResultadoDTO;
 import br.com.cooperativa.votacao_api.controller.dto.VotoRequestDTO;
 import br.com.cooperativa.votacao_api.domain.model.Pauta;
 import br.com.cooperativa.votacao_api.domain.model.SessaoVotacao;
@@ -126,7 +127,7 @@ class VotacaoServiceTest {
         var votoDTO = new VotoRequestDTO("12345678901", "Sim");
 
         Pauta pauta = new Pauta();
-        
+
         SessaoVotacao sessaoEncerrada = new SessaoVotacao(pauta, LocalDateTime.now().minusMinutes(1));
 
         when(sessaoVotacaoRepository.findById(sessaoId)).thenReturn(Optional.of(sessaoEncerrada));
@@ -159,6 +160,31 @@ class VotacaoServiceTest {
 
         assertEquals("Associado já votou nesta pauta.", exception.getMessage());
         verify(votoRepository, never()).save(any(Voto.class));
+    }
+
+
+    @Test
+    void deveContabilizarResultadoEAprovado_quandoHouverMaisVotosSim() {
+        long pautaId = 1L;
+        long sessaoId = 1L;
+        Pauta pauta = new Pauta();
+        pauta.setId(pautaId);
+
+        SessaoVotacao sessaoEncerrada = new SessaoVotacao(pauta, LocalDateTime.now().minusMinutes(1));
+        sessaoEncerrada.setId(sessaoId);
+
+        when(pautaRepository.findById(pautaId)).thenReturn(Optional.of(pauta));
+        when(sessaoVotacaoRepository.findFirstByPautaIdOrderByIdDesc(pautaId)).thenReturn(Optional.of(sessaoEncerrada));
+
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, true)).thenReturn(10L); // 10 votos Sim
+        when(votoRepository.countBySessaoVotacaoIdAndVotoSim(sessaoId, false)).thenReturn(5L);  // 5 votos Não
+
+        ResultadoDTO resultado = votacaoService.contabilizarResultado(pautaId);
+
+        assertNotNull(resultado);
+        assertEquals(10L, resultado.votosSim());
+        assertEquals(5L, resultado.votosNao());
+        assertEquals("Aprovada", resultado.resultado());
     }
 
 }
