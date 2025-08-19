@@ -24,16 +24,21 @@ public class VotacaoService {
     private final VotoRepository votoRepository; 
 
     public SessaoVotacao abrirSessao(Long pautaId, Integer duracaoEmMinutos) {
-        var pauta = pautaRepository.findById(pautaId)
-                .orElseThrow(() -> new EntityNotFoundException("Pauta com ID " + pautaId + " não encontrada."));
+    var pauta = pautaRepository.findById(pautaId)
+            .orElseThrow(() -> new EntityNotFoundException("Pauta com ID " + pautaId + " não encontrada."));
 
-        Integer duracaoFinal = (duracaoEmMinutos == null || duracaoEmMinutos <= 0) ? 1 : duracaoEmMinutos;
-        LocalDateTime dataFechamento = LocalDateTime.now().plusMinutes(duracaoFinal);
-        
-        SessaoVotacao novaSessao = new SessaoVotacao(pauta, dataFechamento);
+    Integer duracaoFinal = (duracaoEmMinutos == null || duracaoEmMinutos <= 0) ? 1 : duracaoEmMinutos;
 
-        return sessaoVotacaoRepository.save(novaSessao);
-    }
+    LocalDateTime dataAbertura = LocalDateTime.now();
+    LocalDateTime dataFechamento = dataAbertura.plusMinutes(duracaoFinal);
+
+    SessaoVotacao novaSessao = new SessaoVotacao();
+    novaSessao.setPauta(pauta);
+    novaSessao.setDataAbertura(dataAbertura);
+    novaSessao.setDataFechamento(dataFechamento);
+
+    return sessaoVotacaoRepository.save(novaSessao);
+}
 
     public void registrarVoto(Long sessaoId, VotoRequestDTO votoDTO) {
         if (!"Sim".equalsIgnoreCase(votoDTO.voto()) && !"Não".equalsIgnoreCase(votoDTO.voto())) {

@@ -28,9 +28,4 @@ public class SessaoVotacao {
     @Column(name = "data_fechamento", nullable = false)
     private LocalDateTime dataFechamento;
 
-    public SessaoVotacao(Pauta pauta, LocalDateTime dataFechamento) {
-        this.pauta = pauta;
-        this.dataAbertura = LocalDateTime.now();
-        this.dataFechamento = dataFechamento;
-    }
 }

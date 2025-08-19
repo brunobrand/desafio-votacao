@@ -49,17 +49,23 @@ class VotacaoControllerTest {
 
     @Test
     void deveAbrirSessao_eRetornarStatus201_quandoPautaExistir() throws Exception {
+        // Arrange
         long pautaId = 1L;
         var requestDTO = new AbrirSessaoDTO(10);
-
         Pauta pauta = new Pauta();
         pauta.setId(pautaId);
-        SessaoVotacao sessaoCriada = new SessaoVotacao(pauta, LocalDateTime.now().plusMinutes(10));
+
+        // --- Bloco Corrigido ---
+        SessaoVotacao sessaoCriada = new SessaoVotacao();
         sessaoCriada.setId(1L);
+        sessaoCriada.setPauta(pauta);
+        sessaoCriada.setDataAbertura(LocalDateTime.now());
+        sessaoCriada.setDataFechamento(LocalDateTime.now().plusMinutes(10));
+        // --- Fim do Bloco Corrigido ---
 
         when(votacaoService.abrirSessao(eq(pautaId), any())).thenReturn(sessaoCriada);
 
-        mockMvc.perform(post("/api/v1/pautas/{pautaId}/sessoes", pautaId) 
+        mockMvc.perform(post("/api/v1/pautas/{pautaId}/sessoes", pautaId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated()) // Espera 201 Created
