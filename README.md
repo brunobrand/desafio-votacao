@@ -48,7 +48,7 @@ O projeto é configurado para ser executado facilmente em qualquer ambiente com 
 
 1.  **Clone o repositório:**
     ```bash
-    git clone <url-do-seu-repositorio>
+    git clone https://github.com/brunobrand/desafio-votacao.git
     cd desafio-votacao
     ```
 
